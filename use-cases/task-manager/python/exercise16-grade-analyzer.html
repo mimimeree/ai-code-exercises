@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grade Analyzer</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 0 20px;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        h1 { margin-bottom: 8px; color: #1a1a2e; }
+
+        .subtitle { color: #666; margin-bottom: 24px; font-size: 0.95em; }
+
+        .input-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .input-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 150px; }
+
+        .input-group label { font-size: 0.85em; font-weight: 600; color: #555; }
+
+        input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95em;
+        }
+
+        input:focus { outline: none; border-color: #4a6cf7; box-shadow: 0 0 0 2px rgba(74,108,247,0.15); }
+
+        button {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95em;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.15s;
+        }
+
+        .btn-primary { background: #4a6cf7; color: white; }
+        .btn-primary:hover { background: #3a5ce5; }
+        .btn-danger { background: #ff4757; color: white; font-size: 0.8em; padding: 4px 10px; }
+
+        .student-list {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .student-list h2 { padding: 16px 20px 12px; font-size: 1.05em; border-bottom: 1px solid #eee; }
+
+        .student-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .student-item:last-child { border-bottom: none; }
+        .student-name { font-weight: 600; }
+        .student-scores { color: #666; font-size: 0.9em; }
+
+        .student-avg {
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+        }
+
+        .avg-pass { background: #e8f5e9; color: #2e7d32; }
+        .avg-fail { background: #ffebee; color: #c62828; }
+        .empty-state { padding: 30px 20px; text-align: center; color: #999; }
+
+        .results {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .results h2 { margin-bottom: 16px; font-size: 1.05em; }
+
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 14px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value { font-size: 1.5em; font-weight: 700; color: #1a1a2e; }
+        .stat-label { font-size: 0.8em; color: #666; margin-top: 4px; }
+        .name-list { font-size: 0.9em; color: #555; margin-top: 4px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <h1>Grade Analyzer</h1>
+    <p class="subtitle">Add students and their scores to see live analysis</p>
+
+    <div class="input-section">
+        <div class="input-row">
+            <div class="input-group">
+                <label for="studentName">Student Name</label>
+                <input type="text" id="studentName" placeholder="e.g. Alice">
+            </div>
+            <div class="input-group">
+                <label for="studentScores">Scores (comma-separated)</label>
+                <input type="text" id="studentScores" placeholder="e.g. 85, 92, 78, 100">
+            </div>
+            <button class="btn-primary" id="addBtn">Add</button>
+        </div>
+    </div>
+
+    <div class="student-list">
+        <h2>Students</h2>
+        <div id="studentListBody">
+            <div class="empty-state">No students added yet</div>
+        </div>
+    </div>
+
+    <div class="results hidden" id="resultsSection">
+        <h2>Analysis</h2>
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="classAvg">—</div>
+                <div class="stat-label">Class Average</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="highestScore">—</div>
+                <div class="stat-label">Highest Score</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="passingCount">—</div>
+                <div class="stat-label">Passing</div>
+                <div class="name-list" id="passingNames"></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="failingCount">—</div>
+                <div class="stat-label">Failing</div>
+                <div class="name-list" id="failingNames"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════════════
+        // STATE
+        // ═══════════════════════════════════════════════════
+        let students = [];
+
+        // ═══════════════════════════════════════════════════
+        // ANALYSIS — grade analyzer (ported from Python)
+        // ═══════════════════════════════════════════════════
+        function analyzeGrades(students) {
+            const averages = students
+                .filter(s => s.scores.length > 0)
+                .map(s => ({
+                    name: s.name,
+                    average: s.scores.reduce((sum, score) => sum + score, 0) / s.scores.length
+                }));
+
+            const passing = averages.filter(s => s.average >= 60).map(s => s.name);
+            const failing = averages.filter(s => s.average < 60).map(s => s.name);
+            const allScores = students.flatMap(s => s.scores);
+
+            return {
+                averages,
+                passing,
+                failing,
+                classAverage: allScores.length > 0
+                    ? allScores.reduce((sum, s) => sum + s, 0) / allScores.length
+                    : 0,
+                highestScore: allScores.length > 0
+                    ? Math.max(...allScores)
+                    : 0,
+            };
+        }
+
+        // ═══════════════════════════════════════════════════
+        // DOM REFERENCES
+        // ═══════════════════════════════════════════════════
+        const studentNameInput = document.getElementById('studentName');
+        const studentScoresInput = document.getElementById('studentScores');
+        const addBtn = document.getElementById('addBtn');
+        const studentListBody = document.getElementById('studentListBody');
+        const resultsSection = document.getElementById('resultsSection');
+
+        // ═══════════════════════════════════════════════════
+        // RENDERING
+        // ═══════════════════════════════════════════════════
+        function renderStudents() {
+            if (students.length === 0) {
+                studentListBody.innerHTML = '<div class="empty-state">No students added yet</div>';
+                resultsSection.classList.add('hidden');
+                return;
+            }
+
+            const result = analyzeGrades(students);
+
+            studentListBody.innerHTML = students.map((student, index) => {
+                const avgData = result.averages.find(a => a.name === student.name);
+                const avg = avgData ? avgData.average.toFixed(1) : '—';
+                const passClass = avgData && avgData.average >= 60 ? 'avg-pass' : 'avg-fail';
+
+                return `
+                    <div class="student-item">
+                        <div>
+                            <span class="student-name">${student.name}</span>
+                            <span class="student-scores"> — ${student.scores.join(', ')}</span>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <span class="student-avg ${passClass}">${avg}</span>
+                            <button class="btn-danger" onclick="removeStudent(${index})">✕</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            renderResults(result);
+        }
+
+        function renderResults(result) {
+            resultsSection.classList.remove('hidden');
+            document.getElementById('classAvg').textContent = result.classAverage.toFixed(1);
+            document.getElementById('highestScore').textContent = result.highestScore;
+            document.getElementById('passingCount').textContent = result.passing.length;
+            document.getElementById('failingCount').textContent = result.failing.length;
+            document.getElementById('passingNames').textContent = result.passing.join(', ') || '—';
+            document.getElementById('failingNames').textContent = result.failing.join(', ') || '—';
+        }
+
+        // ═══════════════════════════════════════════════════
+        // EVENT HANDLERS
+        // ═══════════════════════════════════════════════════
+        function addStudent() {
+            const name = studentNameInput.value.trim();
+            const scoresText = studentScoresInput.value.trim();
+            if (!name || !scoresText) return;
+
+            const scores = scoresText
+                .split(',')
+                .map(s => Number(s.trim()))
+                .filter(n => !isNaN(n));
+
+            if (scores.length === 0) return;
+
+            students.push({ name, scores });
+            studentNameInput.value = '';
+            studentScoresInput.value = '';
+            studentNameInput.focus();
+            renderStudents();
+        }
+
+        function removeStudent(index) {
+            students.splice(index, 1);
+            renderStudents();
+        }
+
+        // ═══════════════════════════════════════════════════
+        // EVENT LISTENERS
+        // ═══════════════════════════════════════════════════
+        addBtn.addEventListener('click', addStudent);
+        studentNameInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') addStudent();
+        });
+        studentScoresInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') addStudent();
+        });
+    </script>
+
+</body>
+</html>
